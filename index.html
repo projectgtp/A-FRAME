@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AI Chat</title>
+<title>Universal AI Chat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -11,7 +11,8 @@
   --bg2:#0b1026;
   --blue:#5b6cff;
   --panel:#0e1433;
-  --text:#fff;
+  --bubble:#1c245a;
+  --text:#ffffff;
 }
 *{box-sizing:border-box}
 body{
@@ -45,6 +46,7 @@ button{
   padding:10px 14px;
   border-radius:12px;
   font-weight:600;
+  cursor:pointer;
 }
 
 /* CHAT */
@@ -67,7 +69,7 @@ button{
   align-self:flex-end;
 }
 .ai{
-  background:#1c245a;
+  background:var(--bubble);
   align-self:flex-start;
 }
 
@@ -109,26 +111,29 @@ textarea{
 .box input{
   width:100%;
   padding:12px;
-  margin-top:8px;
+  margin-top:6px;
   background:#050816;
   color:white;
   border:1px solid #2a2f55;
   border-radius:10px;
 }
+small{opacity:.7}
 </style>
 </head>
 
 <body>
 
-<!-- TOP -->
+<!-- TOP BAR -->
 <div class="topbar">
   <select id="model">
-    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-    <option disabled>──────────</option>
-    <option disabled>gpt-4o (listed)</option>
-    <option disabled>claude-3 (listed)</option>
-    <option disabled>llama-3 (listed)</option>
+    <optgroup label="Google Gemini">
+      <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+      <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+    </optgroup>
+    <optgroup label="DeepSeek">
+      <option value="deepseek-chat">deepseek-chat</option>
+      <option value="deepseek-coder">deepseek-coder</option>
+    </optgroup>
   </select>
   <button onclick="openSettings()">⚙️ API Key</button>
 </div>
@@ -145,10 +150,19 @@ textarea{
 <!-- SETTINGS -->
 <div class="modal" id="settings">
   <div class="box">
-    <h3>Gemini API Key</h3>
-    <input id="apiKey" placeholder="AIzaSy..." />
+    <h3>API Keys</h3>
+
+    <label>Gemini API Key</label>
+    <input id="geminiKey" placeholder="AIzaSy..." />
+
     <br><br>
-    <button onclick="saveKey()">Save</button>
+
+    <label>DeepSeek API Key</label>
+    <input id="deepseekKey" placeholder="sk-..." />
+
+    <small>Stored locally in your browser</small><br><br>
+
+    <button onclick="saveKeys()">Save</button>
     <button onclick="closeSettings()">Close</button>
   </div>
 </div>
@@ -159,41 +173,82 @@ import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 /* SETTINGS */
 window.openSettings = () => {
   settings.style.display = "flex";
-  apiKey.value = localStorage.getItem("GEMINI_KEY") || "";
+  geminiKey.value = localStorage.getItem("GEMINI_KEY") || "";
+  deepseekKey.value = localStorage.getItem("DEEPSEEK_KEY") || "";
 };
 window.closeSettings = () => settings.style.display = "none";
-window.saveKey = () => {
-  localStorage.setItem("GEMINI_KEY", apiKey.value.trim());
-  alert("API key saved");
+window.saveKeys = () => {
+  if(geminiKey.value.trim())
+    localStorage.setItem("GEMINI_KEY", geminiKey.value.trim());
+  if(deepseekKey.value.trim())
+    localStorage.setItem("DEEPSEEK_KEY", deepseekKey.value.trim());
+  alert("API keys saved");
   closeSettings();
 };
 
-/* CHAT */
+/* CHAT UI */
 const chat = document.getElementById("chat");
-function add(role,text){
-  const d=document.createElement("div");
-  d.className="msg "+role;
-  d.textContent=text;
+function add(role, text){
+  const d = document.createElement("div");
+  d.className = "msg " + role;
+  d.textContent = text;
   chat.appendChild(d);
-  chat.scrollTop=chat.scrollHeight;
+  chat.scrollTop = chat.scrollHeight;
 }
 
 /* SEND */
 window.send = async () => {
-  const key = localStorage.getItem("GEMINI_KEY");
-  if(!key){ alert("Set API key first"); return; }
-
   const text = input.value.trim();
   if(!text) return;
 
-  add("user",text);
-  input.value="";
+  add("user", text);
+  input.value = "";
+
+  const selected = model.value;
 
   try{
-    const genAI = new GoogleGenerativeAI(key);
-    const m = genAI.getGenerativeModel({ model: model.value });
+    /* ===== DEEPSEEK ===== */
+    if(selected.startsWith("deepseek")){
+      const key = localStorage.getItem("DEEPSEEK_KEY");
+      if(!key){
+        add("ai","❌ Set DeepSeek API key");
+        return;
+      }
+
+      const res = await fetch("https://api.deepseek.com/v1/chat/completions",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Authorization":"Bearer "+key
+        },
+        body:JSON.stringify({
+          model:selected,
+          messages:[
+            {role:"system",content:"You are a helpful assistant."},
+            {role:"user",content:text}
+          ],
+          temperature:0.7
+        })
+      });
+
+      const data = await res.json();
+      if(!data.choices) throw new Error(JSON.stringify(data));
+      add("ai", data.choices[0].message.content);
+      return;
+    }
+
+    /* ===== GEMINI ===== */
+    const gKey = localStorage.getItem("GEMINI_KEY");
+    if(!gKey){
+      add("ai","❌ Set Gemini API key");
+      return;
+    }
+
+    const genAI = new GoogleGenerativeAI(gKey);
+    const m = genAI.getGenerativeModel({ model: selected });
     const r = await m.generateContent(text);
     add("ai", r.response.text());
+
   }catch(e){
     add("ai","❌ Error: "+e.message);
   }
