@@ -2,244 +2,102 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Multi-AI Hub (50+ AI | Google Default)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Real Gemini Multi-AI (No Backend)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-:root{
-  --bg:#0f1220;
-  --panel:#161a36;
-  --accent:#4c57ff;
-  --text:#eaeaf0;
-  --muted:#9aa0ff;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:system-ui,Arial;
-  background:var(--bg);
-  color:var(--text);
-}
-header{
-  background:#1b1f3b;
-  padding:12px;
-  text-align:center;
-  font-weight:700;
-}
-.container{
-  display:flex;
-  height:calc(100vh - 50px);
-}
-.sidebar{
-  width:260px;
-  background:#14182f;
-  overflow:auto;
-}
-.ai{
-  padding:10px;
-  border-bottom:1px solid #232862;
-  cursor:pointer;
-}
-.ai.active{background:var(--accent)}
-.main{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-}
-.controls{
-  display:flex;
-  gap:8px;
-  padding:8px;
-  background:var(--panel);
-}
-select,button,input{
-  background:#232862;
-  color:white;
-  border:none;
-  padding:6px;
-  border-radius:4px;
-}
-.chat{
-  flex:1;
-  overflow:auto;
-  padding:10px;
-}
-.msg{
-  max-width:80%;
-  padding:8px;
-  margin-bottom:6px;
-  border-radius:6px;
-}
-.user{background:var(--accent);margin-left:auto}
+body{margin:0;background:#0f1220;color:#fff;font-family:Arial}
+.sidebar{width:240px;background:#14182f;height:100vh;float:left;overflow:auto}
+.ai{padding:10px;border-bottom:1px solid #222;cursor:pointer}
+.ai.active{background:#4c57ff}
+.main{margin-left:240px;height:100vh;display:flex;flex-direction:column}
+.controls{padding:8px;background:#161a36}
+.chat{flex:1;overflow:auto;padding:10px}
+.msg{margin-bottom:8px;padding:8px;border-radius:6px;max-width:80%}
+.user{background:#4c57ff;margin-left:auto}
 .ai-msg{background:#1e224d}
-.code{
-  background:#0b0d1a;
-  font-family:monospace;
-  white-space:pre;
-  overflow:auto;
-}
-.input{
-  display:flex;
-  gap:6px;
-  padding:8px;
-  background:var(--panel);
-}
-textarea{
-  flex:1;
-  resize:none;
-  height:50px;
-  background:#0b0d1a;
-  color:white;
-  border:1px solid #2a2f55;
-}
-.image-card{
-  background:#0b0d1a;
-  padding:6px;
-  border-radius:6px;
-}
-.search-card{
-  background:#0b0d1a;
-  padding:6px;
-  border-radius:6px;
-}
-small{color:var(--muted)}
+textarea{height:50px;background:#0b0d1a;color:white;border:1px solid #333;width:100%}
+button{padding:6px;background:#4c57ff;border:none;color:white}
+pre{background:#000;padding:8px;border-radius:6px;overflow:auto}
 </style>
 </head>
 
 <body>
 
-<header>🧠 Multi-AI Hub — Google API Default</header>
-
-<div class="container">
-
 <div class="sidebar" id="aiList"></div>
 
 <div class="main">
+  <div class="controls">
+    <select id="mode">
+      <option value="chat">Chat</option>
+      <option value="code">Code</option>
+    </select>
+  </div>
 
-<div class="controls">
-<select id="mode">
-<option value="chat">Chat</option>
-<option value="code">Code</option>
-<option value="image">Image</option>
-<option value="search">Search</option>
-</select>
+  <div class="chat" id="chat"></div>
 
-<select id="model">
-<option value="google">Google (Default)</option>
-<option value="openai">OpenAI</option>
-<option value="local">Local</option>
-</select>
-
-<button onclick="editAI()">Edit AI</button>
+  <textarea id="input" placeholder="Type..."></textarea>
+  <button onclick="send()">Send</button>
 </div>
 
-<div class="chat" id="chat"></div>
+<script type="module">
+import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-<div class="input">
-<textarea id="input" placeholder="Message..."></textarea>
-<button onclick="send()">Send</button>
-</div>
+const API_KEY = "PASTE_YOUR_REAL_GEMINI_KEY_HERE";
+const genAI = new GoogleGenerativeAI(API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-</div>
-</div>
-
-<script>
-// ===== AI SYSTEM =====
-const AI_COUNT = 50;
-const AIs = JSON.parse(localStorage.getItem("AIs")) ||
-Array.from({length:AI_COUNT},(_,i)=>({
-  id:i,
-  name:`Custom AI ${i+1}`,
-  prompt:`You are Custom AI ${i+1}`,
-  temp:0.7,
-  memory:[],
-  tools:{chat:true,code:true,image:true,search:true}
+// ===== 50 AI PROFILES =====
+const AIs = Array.from({length:50},(_,i)=>({
+  name:`AI ${i+1}`,
+  prompt:`You are AI ${i+1}, expert and intelligent.`,
+  memory:[]
 }));
-
-let currentAI = AIs[0];
+let currentAI=AIs[0];
 
 // ===== UI =====
 const aiList=document.getElementById("aiList");
-function renderAI(){
-  aiList.innerHTML="";
-  AIs.forEach(ai=>{
-    const d=document.createElement("div");
-    d.className="ai"+(ai===currentAI?" active":"");
-    d.textContent=ai.name;
-    d.onclick=()=>{currentAI=ai;renderAI();loadChat()};
-    aiList.appendChild(d);
-  });
-}
-renderAI();
-
-// ===== CHAT =====
-const chat=document.getElementById("chat");
-function add(type,content,isCode=false){
+AIs.forEach(ai=>{
   const d=document.createElement("div");
-  d.className="msg "+(type==="user"?"user":"ai-msg");
-  if(isCode){
-    d.classList.add("code");
-    d.textContent=content;
-  }else d.innerHTML=content;
+  d.className="ai";
+  d.textContent=ai.name;
+  d.onclick=()=>{currentAI=ai;render()};
+  aiList.appendChild(d);
+});
+function render(){
+  document.querySelectorAll(".ai").forEach(a=>a.classList.remove("active"));
+  event.target.classList.add("active");
+  chat.innerHTML="";
+  currentAI.memory.forEach(m=>add(m.r,m.t));
+}
+render();
+
+const chat=document.getElementById("chat");
+function add(role,text,isCode=false){
+  const d=document.createElement("div");
+  d.className="msg "+(role==="user"?"user":"ai-msg");
+  if(isCode) d.innerHTML=`<pre>${text}</pre>`;
+  else d.textContent=text;
   chat.appendChild(d);
   chat.scrollTop=chat.scrollHeight;
 }
-function loadChat(){
-  chat.innerHTML="";
-  currentAI.memory.forEach(m=>add(m.role,m.text,m.code));
-}
 
 // ===== SEND =====
-function send(){
-  const t=input.value.trim();
-  if(!t)return;
-  add("user",t);
-  currentAI.memory.push({role:"user",text:t});
+async function send(){
+  const text=input.value.trim();
+  if(!text)return;
+  add("user",text);
   input.value="";
-  respond(t);
-}
-
-// ===== CORE AI ROUTER =====
-function respond(text){
+  
   const mode=document.getElementById("mode").value;
-  setTimeout(()=>{
-    let r="";
-    if(mode==="chat"){
-      r=`${currentAI.name}: Intelligent response to "${text}"`;
-      add("ai",r);
-    }
-    if(mode==="code"){
-      r=`// Generated by ${currentAI.name}\nconsole.log("Hello World");`;
-      add("ai",r,true);
-    }
-    if(mode==="image"){
-      r=`<div class="image-card">
-      <small>${currentAI.name}</small><br>
-      🖼 Image prompt: ${text}<br>
-      <em>[API image output]</em>
-      </div>`;
-      add("ai",r);
-    }
-    if(mode==="search"){
-      r=`<div class="search-card">
-      <b>Result:</b> ${text}<br>
-      <small>example.com</small>
-      </div>`;
-      add("ai",r);
-    }
-    currentAI.memory.push({role:"ai",text:r,code:mode==="code"});
-    localStorage.setItem("AIs",JSON.stringify(AIs));
-  },500);
-}
+  const prompt = currentAI.prompt + "\n" + text;
 
-// ===== AI EDITOR =====
-function editAI(){
-  const name=prompt("AI Name:",currentAI.name);
-  if(name)currentAI.name=name;
-  const promptTxt=prompt("System Prompt:",currentAI.prompt);
-  if(promptTxt)currentAI.prompt=promptTxt;
-  renderAI();
-  localStorage.setItem("AIs",JSON.stringify(AIs));
+  const result = await model.generateContent(prompt);
+  const reply = result.response.text();
+
+  if(mode==="code") add("ai",reply,true);
+  else add("ai",reply);
+
+  currentAI.memory.push({r:"user",t:text},{r:"ai",t:reply});
 }
 </script>
 
