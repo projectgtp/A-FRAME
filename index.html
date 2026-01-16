@@ -2,92 +2,95 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Universal AI Chat</title>
+<title>AI Chat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 :root{
-  --bg:#0f1220;
-  --panel:#181c3a;
-  --bubble:#1f2455;
-  --accent:#4c5cff;
-  --text:#eaeaff;
-  --muted:#9aa2ff;
+  --bg1:#050816;
+  --bg2:#0b1026;
+  --blue:#5b6cff;
+  --panel:#0e1433;
+  --text:#fff;
 }
 *{box-sizing:border-box}
 body{
   margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:system-ui,Segoe UI,Arial;
   height:100vh;
+  font-family:system-ui,Arial;
+  background:linear-gradient(180deg,var(--bg2),var(--bg1));
+  color:var(--text);
   display:flex;
   flex-direction:column;
 }
 
-/* ===== TOP BAR ===== */
+/* TOP BAR */
 .topbar{
-  padding:10px;
-  background:var(--panel);
   display:flex;
   gap:10px;
-  align-items:center;
+  padding:10px;
 }
-select,button{
-  background:#232862;
+select{
+  flex:1;
+  background:#10163a;
+  color:white;
+  border:2px solid #f5c16c;
+  border-radius:12px;
+  padding:10px;
+}
+button{
+  background:#2b3a7a;
   color:white;
   border:none;
-  padding:8px 10px;
-  border-radius:6px;
+  padding:10px 14px;
+  border-radius:12px;
+  font-weight:600;
 }
-button{cursor:pointer}
 
-/* ===== CHAT ===== */
+/* CHAT */
 .chat{
   flex:1;
   padding:16px;
   overflow:auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
 .msg{
-  max-width:80%;
-  padding:10px 14px;
-  margin-bottom:10px;
-  border-radius:14px;
-  line-height:1.4;
+  max-width:75%;
+  padding:14px 18px;
+  border-radius:18px;
+  font-size:16px;
 }
 .user{
-  background:var(--accent);
-  margin-left:auto;
+  background:var(--blue);
+  align-self:flex-end;
 }
 .ai{
-  background:var(--bubble);
-}
-pre{
-  background:#050714;
-  padding:10px;
-  border-radius:10px;
-  overflow:auto;
+  background:#1c245a;
+  align-self:flex-start;
 }
 
-/* ===== INPUT ===== */
+/* INPUT */
 .input{
   display:flex;
   gap:10px;
   padding:12px;
-  background:var(--panel);
+  background:#070b1e;
 }
 textarea{
   flex:1;
   resize:none;
   height:52px;
-  background:#050714;
-  color:var(--text);
+  background:#0b1026;
+  color:white;
   border:1px solid #2a2f55;
-  border-radius:10px;
-  padding:10px;
+  border-radius:14px;
+  padding:12px;
+  font-size:15px;
 }
 
-/* ===== SETTINGS ===== */
+/* MODAL */
 .modal{
   display:none;
   position:fixed;
@@ -97,22 +100,21 @@ textarea{
   justify-content:center;
 }
 .box{
-  background:var(--panel);
+  background:#0e1433;
   padding:20px;
   width:90%;
   max-width:420px;
-  border-radius:14px;
+  border-radius:16px;
 }
 .box input{
   width:100%;
-  padding:10px;
-  margin-top:6px;
-  background:#050714;
+  padding:12px;
+  margin-top:8px;
+  background:#050816;
   color:white;
   border:1px solid #2a2f55;
-  border-radius:8px;
+  border-radius:10px;
 }
-small{color:var(--muted)}
 </style>
 </head>
 
@@ -121,50 +123,13 @@ small{color:var(--muted)}
 <!-- TOP -->
 <div class="topbar">
   <select id="model">
-    <!-- GEMINI -->
-    <optgroup label="Google Gemini">
-      <option value="gemini-pro">gemini-pro</option>
-      <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-      <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-    </optgroup>
-
-    <!-- OPENAI -->
-    <optgroup label="OpenAI">
-      <option>gpt-4.1</option>
-      <option>gpt-4o</option>
-      <option>gpt-4o-mini</option>
-      <option>gpt-3.5-turbo</option>
-    </optgroup>
-
-    <!-- ANTHROPIC -->
-    <optgroup label="Anthropic">
-      <option>claude-3-opus</option>
-      <option>claude-3-sonnet</option>
-      <option>claude-3-haiku</option>
-    </optgroup>
-
-    <!-- MISTRAL -->
-    <optgroup label="Mistral">
-      <option>mistral-large</option>
-      <option>mistral-medium</option>
-      <option>mistral-small</option>
-    </optgroup>
-
-    <!-- META -->
-    <optgroup label="Meta LLaMA">
-      <option>llama-3-70b</option>
-      <option>llama-3-8b</option>
-    </optgroup>
-
-    <!-- LOCAL / OTHER -->
-    <optgroup label="Other / Local">
-      <option>deepseek</option>
-      <option>qwen</option>
-      <option>phi</option>
-      <option>custom-local</option>
-    </optgroup>
+    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+    <option disabled>──────────</option>
+    <option disabled>gpt-4o (listed)</option>
+    <option disabled>claude-3 (listed)</option>
+    <option disabled>llama-3 (listed)</option>
   </select>
-
   <button onclick="openSettings()">⚙️ API Key</button>
 </div>
 
@@ -180,10 +145,10 @@ small{color:var(--muted)}
 <!-- SETTINGS -->
 <div class="modal" id="settings">
   <div class="box">
-    <h3>API Key</h3>
-    <input id="key" placeholder="Gemini API key">
-    <small>Saved locally</small><br><br>
-    <button onclick="save()">Save</button>
+    <h3>Gemini API Key</h3>
+    <input id="apiKey" placeholder="AIzaSy..." />
+    <br><br>
+    <button onclick="saveKey()">Save</button>
     <button onclick="closeSettings()">Close</button>
   </div>
 </div>
@@ -191,55 +156,48 @@ small{color:var(--muted)}
 <script type="module">
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-// ===== SETTINGS =====
-function openSettings(){
-  settings.style.display="flex";
-  key.value=localStorage.getItem("GEMINI_KEY")||"";
-}
-function closeSettings(){settings.style.display="none";}
-function save(){
-  localStorage.setItem("GEMINI_KEY",key.value.trim());
-  alert("Saved");
+/* SETTINGS */
+window.openSettings = () => {
+  settings.style.display = "flex";
+  apiKey.value = localStorage.getItem("GEMINI_KEY") || "";
+};
+window.closeSettings = () => settings.style.display = "none";
+window.saveKey = () => {
+  localStorage.setItem("GEMINI_KEY", apiKey.value.trim());
+  alert("API key saved");
   closeSettings();
-}
-window.openSettings=openSettings;
-window.closeSettings=closeSettings;
-window.save=save;
+};
 
-// ===== CHAT =====
-const chat=document.getElementById("chat");
-function add(role,text,isCode=false){
+/* CHAT */
+const chat = document.getElementById("chat");
+function add(role,text){
   const d=document.createElement("div");
-  d.className="msg "+(role==="user"?"user":"ai");
-  d.innerHTML=isCode?`<pre>${text}</pre>`:text;
+  d.className="msg "+role;
+  d.textContent=text;
   chat.appendChild(d);
   chat.scrollTop=chat.scrollHeight;
 }
 
-// ===== SEND =====
-async function send(){
-  const apiKey=localStorage.getItem("GEMINI_KEY");
-  if(!apiKey)return alert("Set API key");
+/* SEND */
+window.send = async () => {
+  const key = localStorage.getItem("GEMINI_KEY");
+  if(!key){ alert("Set API key first"); return; }
 
-  const text=input.value.trim();
-  if(!text)return;
+  const text = input.value.trim();
+  if(!text) return;
 
   add("user",text);
   input.value="";
 
-  const selected=model.value;
-
-  if(!selected.startsWith("gemini")){
-    add("ai","⚠️ This model is listed but not wired yet.");
-    return;
+  try{
+    const genAI = new GoogleGenerativeAI(key);
+    const m = genAI.getGenerativeModel({ model: model.value });
+    const r = await m.generateContent(text);
+    add("ai", r.response.text());
+  }catch(e){
+    add("ai","❌ Error: "+e.message);
   }
-
-  const genAI=new GoogleGenerativeAI(apiKey);
-  const m=genAI.getGenerativeModel({model:selected});
-  const result=await m.generateContent(text);
-  add("ai",result.response.text());
-}
-window.send=send;
+};
 </script>
 
 </body>
