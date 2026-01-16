@@ -2,54 +2,220 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Real Gemini Multi-AI (No Backend)</title>
+<title>AI Dashboard — Gemini</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-body{margin:0;background:#0f1220;color:#fff;font-family:Arial}
-.sidebar{width:240px;background:#14182f;height:100vh;float:left;overflow:auto}
-.ai{padding:10px;border-bottom:1px solid #222;cursor:pointer}
-.ai.active{background:#4c57ff}
-.main{margin-left:240px;height:100vh;display:flex;flex-direction:column}
-.controls{padding:8px;background:#161a36}
-.chat{flex:1;overflow:auto;padding:10px}
-.msg{margin-bottom:8px;padding:8px;border-radius:6px;max-width:80%}
-.user{background:#4c57ff;margin-left:auto}
-.ai-msg{background:#1e224d}
-textarea{height:50px;background:#0b0d1a;color:white;border:1px solid #333;width:100%}
-button{padding:6px;background:#4c57ff;border:none;color:white}
-pre{background:#000;padding:8px;border-radius:6px;overflow:auto}
+:root{
+  --bg:#0b0f1a;
+  --panel:#12172b;
+  --glass:rgba(255,255,255,.06);
+  --accent:#5b6cff;
+  --text:#eaeaff;
+  --muted:#9aa2ff;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,Segoe UI,Arial;
+  background:linear-gradient(120deg,#0b0f1a,#090c16);
+  color:var(--text);
+  height:100vh;
+  overflow:hidden;
+}
+.app{
+  display:flex;
+  height:100%;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  width:260px;
+  background:var(--panel);
+  border-right:1px solid #1c2245;
+  overflow:auto;
+}
+.sidebar h3{
+  padding:14px;
+  margin:0;
+  font-size:14px;
+  color:var(--muted);
+}
+.ai-item{
+  padding:12px 14px;
+  cursor:pointer;
+  border-bottom:1px solid #1a1f3f;
+}
+.ai-item.active{
+  background:var(--accent);
+}
+.ai-item:hover{
+  background:#1a2060;
+}
+
+/* ===== MAIN ===== */
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ===== TOP BAR ===== */
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  background:var(--glass);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid #1c2245;
+}
+select,button{
+  background:#1a1f3f;
+  color:var(--text);
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+}
+button{cursor:pointer}
+
+/* ===== CHAT ===== */
+.chat{
+  flex:1;
+  padding:14px;
+  overflow:auto;
+}
+.msg{
+  max-width:80%;
+  margin-bottom:10px;
+  padding:10px 12px;
+  border-radius:10px;
+  line-height:1.4;
+}
+.user{
+  background:var(--accent);
+  margin-left:auto;
+}
+.ai{
+  background:#1a1f3f;
+}
+pre{
+  background:#050714;
+  padding:10px;
+  border-radius:8px;
+  overflow:auto;
+}
+
+/* ===== INPUT ===== */
+.input{
+  display:flex;
+  gap:10px;
+  padding:10px;
+  background:var(--glass);
+  border-top:1px solid #1c2245;
+}
+textarea{
+  flex:1;
+  resize:none;
+  height:50px;
+  background:#050714;
+  color:var(--text);
+  border:1px solid #1c2245;
+  border-radius:8px;
+  padding:8px;
+}
+
+/* ===== SETTINGS MODAL ===== */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  align-items:center;
+  justify-content:center;
+}
+.modal-box{
+  background:var(--panel);
+  padding:20px;
+  width:90%;
+  max-width:400px;
+  border-radius:12px;
+}
+.modal-box input{
+  width:100%;
+  padding:8px;
+  margin-top:6px;
+  background:#050714;
+  color:white;
+  border:1px solid #1c2245;
+  border-radius:6px;
+}
+small{color:var(--muted)}
 </style>
 </head>
 
 <body>
 
-<div class="sidebar" id="aiList"></div>
+<div class="app">
 
-<div class="main">
-  <div class="controls">
-    <select id="mode">
-      <option value="chat">Chat</option>
-      <option value="code">Code</option>
-    </select>
+  <div class="sidebar" id="aiList">
+    <h3>AI Profiles</h3>
   </div>
 
-  <div class="chat" id="chat"></div>
+  <div class="main">
+    <div class="topbar">
+      <select id="mode">
+        <option value="chat">Chat</option>
+        <option value="code">Code</option>
+      </select>
+      <span style="color:var(--muted)">Gemini</span>
+      <button onclick="openSettings()">⚙️ Settings</button>
+    </div>
 
-  <textarea id="input" placeholder="Type..."></textarea>
-  <button onclick="send()">Send</button>
+    <div class="chat" id="chat"></div>
+
+    <div class="input">
+      <textarea id="input" placeholder="Type here..."></textarea>
+      <button onclick="send()">Send</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- SETTINGS -->
+<div class="modal" id="settings">
+  <div class="modal-box">
+    <h3>API Settings</h3>
+    <label>Gemini API Key</label>
+    <input id="apiKey">
+    <small>Stored locally in your browser</small><br><br>
+    <button onclick="saveKey()">Save</button>
+    <button onclick="closeSettings()">Close</button>
+  </div>
 </div>
 
 <script type="module">
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-const API_KEY = "PASTE_YOUR_REAL_GEMINI_KEY_HERE";
-const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+// ===== SETTINGS =====
+function openSettings(){
+  settings.style.display="flex";
+  apiKey.value=localStorage.getItem("GEMINI_KEY")||"";
+}
+function closeSettings(){settings.style.display="none";}
+function saveKey(){
+  localStorage.setItem("GEMINI_KEY",apiKey.value.trim());
+  alert("Saved");
+  closeSettings();
+}
+window.openSettings=openSettings;
+window.closeSettings=closeSettings;
+window.saveKey=saveKey;
 
-// ===== 50 AI PROFILES =====
-const AIs = Array.from({length:50},(_,i)=>({
+// ===== AI INIT =====
+const AIs=[...Array(50)].map((_,i)=>({
   name:`AI ${i+1}`,
-  prompt:`You are AI ${i+1}, expert and intelligent.`,
+  prompt:`You are AI ${i+1}, expert assistant.`,
   memory:[]
 }));
 let currentAI=AIs[0];
@@ -58,24 +224,26 @@ let currentAI=AIs[0];
 const aiList=document.getElementById("aiList");
 AIs.forEach(ai=>{
   const d=document.createElement("div");
-  d.className="ai";
+  d.className="ai-item";
   d.textContent=ai.name;
-  d.onclick=()=>{currentAI=ai;render()};
+  d.onclick=()=>selectAI(ai,d);
   aiList.appendChild(d);
 });
-function render(){
-  document.querySelectorAll(".ai").forEach(a=>a.classList.remove("active"));
-  event.target.classList.add("active");
+function selectAI(ai,el){
+  currentAI=ai;
+  document.querySelectorAll(".ai-item").forEach(x=>x.classList.remove("active"));
+  el.classList.add("active");
   chat.innerHTML="";
-  currentAI.memory.forEach(m=>add(m.r,m.t));
+  ai.memory.forEach(m=>add(m.r,m.t,m.c));
 }
-render();
+aiList.children[1].classList.add("active");
 
+// ===== CHAT =====
 const chat=document.getElementById("chat");
-function add(role,text,isCode=false){
+function add(role,text,isCode){
   const d=document.createElement("div");
-  d.className="msg "+(role==="user"?"user":"ai-msg");
-  if(isCode) d.innerHTML=`<pre>${text}</pre>`;
+  d.className="msg "+(role==="user"?"user":"ai");
+  if(isCode)d.innerHTML=`<pre>${text}</pre>`;
   else d.textContent=text;
   chat.appendChild(d);
   chat.scrollTop=chat.scrollHeight;
@@ -83,22 +251,25 @@ function add(role,text,isCode=false){
 
 // ===== SEND =====
 async function send(){
+  const key=localStorage.getItem("GEMINI_KEY");
+  if(!key)return alert("Set API key in Settings");
+
+  const genAI=new GoogleGenerativeAI(key);
+  const model=genAI.getGenerativeModel({model:"gemini-pro"});
+
   const text=input.value.trim();
   if(!text)return;
   add("user",text);
   input.value="";
-  
-  const mode=document.getElementById("mode").value;
-  const prompt = currentAI.prompt + "\n" + text;
 
-  const result = await model.generateContent(prompt);
-  const reply = result.response.text();
+  const result=await model.generateContent(currentAI.prompt+"\n"+text);
+  const reply=result.response.text();
 
-  if(mode==="code") add("ai",reply,true);
-  else add("ai",reply);
-
-  currentAI.memory.push({r:"user",t:text},{r:"ai",t:reply});
+  const isCode=mode.value==="code";
+  add("ai",reply,isCode);
+  currentAI.memory.push({r:"user",t:text},{r:"ai",t:reply,c:isCode});
 }
+window.send=send;
 </script>
 
 </body>
