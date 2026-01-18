@@ -1,49 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Subdomain Takeover Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .card {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      color: #00e5ff;
+    }
+
+    .domain {
+      font-weight: bold;
+      color: #ffcc00;
+      word-break: break-all;
+    }
+
+    .info {
+      margin: 15px 0;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: #00e5ff;
+      color: #000;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    footer {
+      margin-top: 20px;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    footer span {
+      color: #00e5ff;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>AI Chat</h1>
-            <div class="model-selector">
-                <label for="model">Model:</label>
-                <select id="model">
-                    <option value="gemini">Gemini</option>
-                    <option value="deepseek">DeepSeek</option>
-                </select>
-            </div>
-            <button id="settings-btn">Settings</button>
-        </header>
-        <main id="chat-container"></main>
-        <footer>
-            <form id="chat-form">
-                <input type="text" id="message-input" placeholder="Type your message...">
-                <button type="submit">Send</button>
-            </form>
-        </footer>
-    </div>
 
-    <div id="settings-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2>Settings</h2>
-            <div class="api-key-setting">
-                <label for="gemini-api-key">Gemini API Key:</label>
-                <input type="password" id="gemini-api-key">
-            </div>
-            <div class="api-key-setting">
-                <label for="deepseek-api-key">DeepSeek API Key:</label>
-                <input type="password" id="deepseek-api-key">
-            </div>
-            <button id="save-settings-btn">Save</button>
-        </div>
-    </div>
+  <div class="card">
+    <h1>Subdomain Takeover Demo</h1>
 
-    <script src="script.js"></script>
+    <p class="info">
+      This page demonstrates a <b>subdomain takeover scenario</b> for educational purposes only.
+    </p>
+
+    <p class="info">
+      Domain:<br />
+      <span class="domain">challenge.localhostvicky.cc</span>
+    </p>
+
+    <div class="badge" id="status">Checking status...</div>
+
+    <p class="info">
+      👤 <b>Name:</b> Nayeem<br />
+      🌍 <b>Country:</b> BD<br />
+      💬 <b>Telegram:</b> @goodxvampre
+    </p>
+
+    <footer>
+      ⚠️ Educational Use Only<br />
+      <span>No malicious intent • No data collection</span>
+    </footer>
+  </div>
+
+  <script>
+    // Simple demo logic
+    const status = document.getElementById("status");
+
+    setTimeout(() => {
+      status.textContent = "Domain Successfully Controlled";
+      status.style.background = "#00ff88";
+    }, 1200);
+  </script>
+
 </body>
 </html>
